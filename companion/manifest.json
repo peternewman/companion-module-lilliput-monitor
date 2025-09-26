@@ -13,7 +13,7 @@
 	},
 	"keywords": ["Lilliput", "Monitor"],
 	"manufacturer": "Lilliput",
-	"products": ["Monitor"],
+	"products": ["Monitor", "Q18"],
 	"repository": "git+https://github.com/bitfocus/companion-module-lilliput-monitor.git",
 	"maintainers": [
 		{
