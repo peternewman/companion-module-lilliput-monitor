@@ -244,7 +244,7 @@ class LilliputMonitorInstance extends InstanceBase {
 							}
 						}
 						// Truncate on null and strip any trailing whitespace
-						self.DATA['format'] = decodedText.replace(/\0.*$/,'').trimEnd()
+						self.DATA['format'] = decodedText.replace(/\0.*$/, '').trimEnd()
 					} else if (k == 'name1') {
 						var decodedText = ''
 						for (var i = 1; i <= 16; i++) {
@@ -255,7 +255,7 @@ class LilliputMonitorInstance extends InstanceBase {
 							}
 						}
 						// Truncate on null and strip any trailing whitespace
-						self.DATA['name'] = decodedText.replace(/\0.*$/,'').trimEnd()
+						self.DATA['name'] = decodedText.replace(/\0.*$/, '').trimEnd()
 					} else {
 						self.DATA[k] = data.value[k]
 					}
