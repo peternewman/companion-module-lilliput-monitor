@@ -48,6 +48,7 @@ class LilliputMonitorInstance extends InstanceBase {
 	init(config) {
 		this.config = config
 		this.DATA = {}
+		this.udp = undefined
 
 		this.CHOICES_ON_OFF = [
 			{ id: 'off', label: 'Off' },
@@ -80,7 +81,7 @@ class LilliputMonitorInstance extends InstanceBase {
 
 		this.CHOICES_SOURCE = this.generateChoices(commands, 'source', 'source')
 
-		this.CHOICES_SOURCE_MULTIVIEWER = this.generateChoices(commands, 'source', 'mv1-2')
+		this.CHOICES_SOURCE_MULTIVIEWER = this.generateChoices(commands, 'source', 'mv2-1')
 
 		this.CHOICES_AUDIO_METER = this.generateChoices(commands, 'audio', 'meter')
 
@@ -88,7 +89,11 @@ class LilliputMonitorInstance extends InstanceBase {
 
 		this.CHOICES_PICTURE_COLOR_TEMP = this.generateChoices(commands, 'picture', 'color-temp')
 
-		this.CHOICES_UMD_TALLY = this.generateChoices(commands, 'umd', 'tally')
+		this.CHOICES_UMD_TALLY_UMD1 = this.generateChoices(commands, 'umd', 'tally-umd1')
+
+		this.CHOICES_UMD_UMD3_UMD2 = this.generateChoices(commands, 'umd', 'umd3-umd2')
+
+		this.CHOICES_UMD_UMDNUM_UMD4 = this.generateChoices(commands, 'umd', 'umdnum-umd4')
 
 		this.PRESETS_SETTINGS = [
 			{
@@ -98,7 +103,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				label: '',
 				choices: this.CHOICES_SOURCE,
 				category: 'Source',
-				additionalOptions: { mv1_2: 'SDI1-SDI2', mv3_4: 'SDI3-SDI4' },
+				additionalOptions: { mv2_1: 'SDI2-SDI1', mv4_3: 'SDI4-SDI3' },
 			},
 			{
 				action: 'audio',
@@ -125,14 +130,15 @@ class LilliputMonitorInstance extends InstanceBase {
 					color_temp: '6500K',
 				},
 			},
+			// TODO(Peter): Make these font size auto
 			{
 				action: 'umd',
-				setting: 'tally',
-				feedback: 'tally',
-				label: 'Tally ',
-				choices: this.CHOICES_UMD_TALLY,
+				setting: 'tally_umd1',
+				feedback: 'tally_umd1',
+				label: 'Tally UMD1 ',
+				choices: this.CHOICES_UMD_TALLY_UMD1,
 				category: 'UMD',
-				additionalOptions: { text: '' },
+				additionalOptions: { text: '', umd3_umd2: 'Off-Off', umdnum_umd4: '0-Off' },
 			},
 		]
 
@@ -168,7 +174,8 @@ class LilliputMonitorInstance extends InstanceBase {
 		let self = this
 
 		if (self.dev !== undefined) {
-			self.dev.process('#close')
+			// TODO(Peter): Close any existing UDP socket
+			//self.dev.process('#close')
 			delete self.dev
 		}
 
@@ -186,7 +193,10 @@ class LilliputMonitorInstance extends InstanceBase {
 		self.updateStatus(InstanceStatus.Connecting)
 
 		// Disconnect = false to match the previous behaviour of the module, although we don't get as much connection feedback this way
-		self.dev = new LilliputD({ host: self.config.host, port: self.config.port }, { disconnect: false })
+		//self.dev = new LilliputD({ host: self.config.host, port: self.config.port }, { disconnect: false })
+		// For now we just use the device to encode/decode so we can use createSharedUdpSocket
+		var tunnel = new PassThrough()
+		self.dev = new LilliputD({ stream: tunnel }, { disconnect: false })
 		// self.dev.emitter.on('connectionData', (data) => self.log('debug', 'Conn Data ' + JSON.stringify(data)))
 		self.dev.emitter.on('connectionStatus', (data) => {
 			self.log('debug', 'Conn Status ' + JSON.stringify(data))
@@ -200,7 +210,7 @@ class LilliputMonitorInstance extends InstanceBase {
 						// Try to reconnect
 						// TODO(Peter): Do some sort of backoff?
 						if (self.dev !== undefined) {
-							self.dev.process('#connect')
+							//self.dev.process('#connect')
 						}
 						break
 					case 'error':
@@ -224,7 +234,31 @@ class LilliputMonitorInstance extends InstanceBase {
 			// Handle updated data
 			if (typeof data.value === 'object' || Array.isArray(data.value)) {
 				for (var k in data.value) {
-					self.DATA[k] = data.value[k]
+					// TODO(Peter): End on null and strip trailing whitespace on format and name...
+					// TODO(Peter): Drop the other irrelevant values for format and name
+					if (k == 'format1') {
+						var decodedText = ''
+						for (var i = 1; i <= 18; i++) {
+							//if (i < text.length) {
+							decodedText += String.fromCharCode(data.value['format' + i])
+							//} else {
+							//	decodedText += ' '
+							//}
+						}
+						self.DATA['format'] = decodedText
+					} else if (k == 'name1') {
+						var decodedText = ''
+						for (var i = 1; i <= 16; i++) {
+							//if (i < text.length) {
+							decodedText += String.fromCharCode(data.value['name' + i])
+							//} else {
+							//	decodedText += ' '
+							//}
+						}
+						self.DATA['name'] = decodedText
+					} else {
+						self.DATA[k] = data.value[k]
+					}
 				}
 			} else {
 				self.DATA[data.req] = data.value
@@ -242,9 +276,6 @@ class LilliputMonitorInstance extends InstanceBase {
 			this.checkFeedbacks('color-temp')
 		})
 
-		// Force a connect for now
-		self.dev.process('#connect')
-
 		self.log('debug', 'Binding to UDP port ' + self.config.listen_port)
 		try {
 			self.udp = self.createSharedUdpSocket('udp4', (msg, rinfo) => self.checkMessage(self, msg, rinfo))
@@ -254,13 +285,23 @@ class LilliputMonitorInstance extends InstanceBase {
 				self.updateStatus(InstanceStatus.ConnectionFailure, 'Network error: ' + err.message)
 				self.log('error', 'Network error: ' + err.message)
 			})
+
+			self.udp.on('listening', function () {
+				self.updateStatus(InstanceStatus.Connecting)
+				self.log('info', 'Listening...')
+				self.log('debug', 'Bound state: ' + JSON.stringify(self.udp.boundState))
+
+				// We use lots of the statuses and expose the others as variables
+				// It's also generally useful to trigger a connectionStatus message
+				self.doAction('status?')
+
+				// Test status data via loopback connection...
+				// let buf = Buffer.from('5a470020010200fffe0001020304050602070400060000104000000400024e6f205369676e616c2020202020202020204d6f6e69746f72202020202020202020220210320109dd', 'hex')
+				// self.udp.send(buf, Number(self.config.port), self.config.host)
+			})
 		} catch (error) {
 			self.log('error', 'Error binding UDP Port: ' + error)
 		}
-
-		// We use lots of the statuses and expose the others as variables
-		// It's also generally useful to trigger a connectionStatus message
-		self.dev.process('status?')
 	}
 
 	checkMessage(self, msg, rinfo) {
@@ -309,7 +350,7 @@ class LilliputMonitorInstance extends InstanceBase {
 	// When module gets deleted
 	destroy() {
 		if (this.dev !== undefined) {
-			this.dev.process('#close')
+			//this.dev.process('#close')
 			delete this.dev
 		}
 
@@ -330,8 +371,28 @@ class LilliputMonitorInstance extends InstanceBase {
 		var variableDefinitions = []
 
 		variableDefinitions.push({
+			name: 'Name',
+			variableId: 'name',
+		})
+
+		variableDefinitions.push({
+			name: 'Format',
+			variableId: 'format',
+		})
+
+		variableDefinitions.push({
 			name: 'Source',
 			variableId: 'source',
+		})
+
+		variableDefinitions.push({
+			name: 'Multiviewer 2-1',
+			variableId: 'mv2-1',
+		})
+
+		variableDefinitions.push({
+			name: 'Multiviewer 4-3',
+			variableId: 'mv4-3',
 		})
 
 		variableDefinitions.push({
@@ -647,22 +708,22 @@ class LilliputMonitorInstance extends InstanceBase {
 					},
 					{
 						type: 'dropdown',
-						label: 'MV1-2',
-						id: 'mv1_2',
+						label: 'MV2-1',
+						id: 'mv2_1',
 						choices: system.CHOICES_SOURCE_MULTIVIEWER,
 						default: system.CHOICES_SOURCE_MULTIVIEWER.length > 0 ? system.CHOICES_SOURCE_MULTIVIEWER[0].id : '',
 					},
 					{
 						type: 'dropdown',
-						label: 'MV3-4',
-						id: 'mv3_4',
+						label: 'MV4-3',
+						id: 'mv4_3',
 						choices: system.CHOICES_SOURCE_MULTIVIEWER,
 						default: system.CHOICES_SOURCE_MULTIVIEWER.length > 0 ? system.CHOICES_SOURCE_MULTIVIEWER[0].id : '',
 					},
 				],
 				callback: async (action) => {
 					await system.doAction(
-						'source ' + action.options.source_name + ',' + action.options.mv1_2 + ',' + action.options.mv3_4,
+						'source ' + action.options.source_name + ',' + action.options.mv2_1 + ',' + action.options.mv4_3,
 					)
 				},
 			},
@@ -795,16 +856,30 @@ class LilliputMonitorInstance extends InstanceBase {
 				options: [
 					{
 						type: 'dropdown',
-						label: 'Tally Color',
-						id: 'tally',
-						choices: system.CHOICES_UMD_TALLY,
-						default: system.CHOICES_UMD_TALLY.length > 0 ? system.CHOICES_UMD_TALLY[0].id : '',
+						label: 'Tally Color-UMD1',
+						id: 'tally_umd1',
+						choices: system.CHOICES_UMD_TALLY_UMD1,
+						default: system.CHOICES_UMD_TALLY_UMD1.length > 0 ? system.CHOICES_UMD_TALLY_UMD1[0].id : '',
 					},
 					{
 						type: 'textinput',
 						label: 'Text',
 						id: 'text',
 						default: '',
+					},
+					{
+						type: 'dropdown',
+						label: 'UMD3-UMD2',
+						id: 'umd3_umd2',
+						choices: system.CHOICES_UMD_UMD3_UMD2,
+						default: system.CHOICES_UMD_UMD3_UMD2.length > 0 ? system.CHOICES_UMD_UMD3_UMD2[0].id : '',
+					},
+					{
+						type: 'dropdown',
+						label: 'UMD Number-UMD4',
+						id: 'umdnum_umd4',
+						choices: system.CHOICES_UMD_UMDNUM_UMD4,
+						default: system.CHOICES_UMD_UMDNUM_UMD4.length > 0 ? system.CHOICES_UMD_UMDNUM_UMD4[0].id : '',
 					},
 				],
 				callback: async (action) => {
@@ -817,7 +892,15 @@ class LilliputMonitorInstance extends InstanceBase {
 							encodedText += ',0x20'
 						}
 					}
-					await system.doAction('umd ' + action.options.tally + encodedText + ',val1a,val2a')
+					await system.doAction(
+						'umd ' +
+							action.options.tally_umd1 +
+							encodedText +
+							',' +
+							action.options.umd3_umd2 +
+							',' +
+							action.options.umdnum_umd4,
+					)
 				},
 			},
 			customCommand: {
@@ -847,11 +930,16 @@ class LilliputMonitorInstance extends InstanceBase {
 			// This is using parts of the library that aren't publicly exposed and may change
 			if (
 				this.dev !== undefined &&
-				this.dev.mode == 'udp' &&
-				this.dev.socket !== undefined
-				// && this.dev.socket.readyState === 'open'
+				// && this.dev.mode == 'udp'
+				// && this.dev.socket !== undefined
+				this.udp !== undefined
+				// TODO(Peter): better check UDP connected status
+				// && this.udp.boundState ==
 			) {
-				this.dev.process(cmd)
+				//this.dev.process(cmd)
+				let cmdo = self.dev.encode(cmd)
+				this.udp.send(cmdo.encoded, Number(self.config.port), self.config.host)
+				this.log('debug', 'Sent via UDP!')
 			} else {
 				// TODO(Peter): Should probably allow the internal # commands through regardless here
 				this.log('debug', 'Socket not connected :(')
