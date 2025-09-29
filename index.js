@@ -138,7 +138,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				label: 'Tally UMD1 ',
 				choices: this.CHOICES_UMD_TALLY_UMD1,
 				category: 'UMD',
-				additionalOptions: { text: '', umd3_umd2: 'Off-Off', umdnum_umd4: '0-Off' },
+				additionalOptions: { text: '', umd3_umd2: 'Off-Off', umdnum_umd4: '1-Off-White' },
 			},
 		]
 
@@ -234,28 +234,28 @@ class LilliputMonitorInstance extends InstanceBase {
 			// Handle updated data
 			if (typeof data.value === 'object' || Array.isArray(data.value)) {
 				for (var k in data.value) {
-					// TODO(Peter): End on null and strip trailing whitespace on format and name...
-					// TODO(Peter): Drop the other irrelevant values for format and name
 					if (k == 'format1') {
 						var decodedText = ''
 						for (var i = 1; i <= 18; i++) {
-							//if (i < text.length) {
-							decodedText += String.fromCharCode(data.value['format' + i])
-							//} else {
-							//	decodedText += ' '
-							//}
+							if (data.value['format' + i] !== undefined) {
+								decodedText += String.fromCharCode(data.value['format' + i])
+								// Drop the now redundant original value
+								delete data.value['format' + i]
+							}
 						}
-						self.DATA['format'] = decodedText
+						// Truncate on null and strip any trailing whitespace
+						self.DATA['format'] = decodedText.replace(/\0.*$/,'').trimEnd()
 					} else if (k == 'name1') {
 						var decodedText = ''
 						for (var i = 1; i <= 16; i++) {
-							//if (i < text.length) {
-							decodedText += String.fromCharCode(data.value['name' + i])
-							//} else {
-							//	decodedText += ' '
-							//}
+							if (data.value['name' + i] !== undefined) {
+								decodedText += String.fromCharCode(data.value['name' + i])
+								// Drop the now redundant original value
+								delete data.value['name' + i]
+							}
 						}
-						self.DATA['name'] = decodedText
+						// Truncate on null and strip any trailing whitespace
+						self.DATA['name'] = decodedText.replace(/\0.*$/,'').trimEnd()
 					} else {
 						self.DATA[k] = data.value[k]
 					}
@@ -296,8 +296,8 @@ class LilliputMonitorInstance extends InstanceBase {
 				self.doAction('status?')
 
 				// Test status data via loopback connection...
-				// let buf = Buffer.from('5a470020010200fffe0001020304050602070400060000104000000400024e6f205369676e616c2020202020202020204d6f6e69746f72202020202020202020220210320109dd', 'hex')
-				// self.udp.send(buf, Number(self.config.port), self.config.host)
+				//let buf = Buffer.from('5a470020010200fffe0001020304050602070400060000104000000400024e6f205369676e616c2020202020202020204d6f6e69746f72202020202020202020220210320109dd', 'hex')
+				//self.udp.send(buf, Number(self.config.port), self.config.host)
 			})
 		} catch (error) {
 			self.log('error', 'Error binding UDP Port: ' + error)
