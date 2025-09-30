@@ -273,7 +273,8 @@ class LilliputMonitorInstance extends InstanceBase {
 			this.checkFeedbacks('tint')
 			this.checkFeedbacks('sharpness')
 			this.checkFeedbacks('backlight')
-			this.checkFeedbacks('color-temp')
+			this.checkFeedbacks('color_temp')
+			this.checkFeedbacks('tally_umd1')
 		})
 
 		self.log('debug', 'Binding to UDP port ' + self.config.listen_port)
@@ -432,7 +433,7 @@ class LilliputMonitorInstance extends InstanceBase {
 
 		variableDefinitions.push({
 			name: 'Color Temperature',
-			variableId: 'color-temp',
+			variableId: 'color_temp',
 		})
 
 		// TODO(Peter): Add and expose other variables
@@ -451,9 +452,10 @@ class LilliputMonitorInstance extends InstanceBase {
 			options: [
 				{
 					type: 'dropdown',
-					label: 'source',
+					label: 'Source',
 					id: 'source_name',
 					choices: this.CHOICES_SOURCE,
+					default: this.CHOICES_SOURCE.length > 0 ? this.CHOICES_SOURCE[0].id : '',
 				},
 			],
 			defaultStyle: {
@@ -637,6 +639,50 @@ class LilliputMonitorInstance extends InstanceBase {
 			},
 			callback: (feedback, bank) => {
 				return this.DATA.backlight == parseInt(feedback.options.backlight)
+			},
+		}
+
+		feedbacks['color_temp'] = {
+			type: 'boolean',
+			name: 'Color Temperature',
+			description: 'If the color temperature is in the specified state, give feedback',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Color Temperature',
+					id: 'color_temp',
+					choices: this.CHOICES_PICTURE_COLOR_TEMP,
+					default: this.CHOICES_PICTURE_COLOR_TEMP.length > 0 ? this.CHOICES_PICTURE_COLOR_TEMP[0].id : '',
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(255, 255, 0),
+			},
+			callback: (feedback, bank) => {
+				return this.DATA['color-temp'] == feedback.options.color_temp
+			},
+		}
+
+		feedbacks['tally_umd1'] = {
+			type: 'boolean',
+			name: 'Tally Color - UMD1',
+			description: 'If tally color and UMD1 are in the specified states, give feedback',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Tally UMD1',
+					id: 'tally_umd1',
+					choices: this.CHOICES_UMD_TALLY_UMD1,
+					default: this.CHOICES_UMD_TALLY_UMD1.length > 0 ? this.CHOICES_UMD_TALLY_UMD1[0].id : '',
+				},
+			],
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(255, 255, 0),
+			},
+			callback: (feedback, bank) => {
+				return this.DATA['tally-umd1'] == feedback.options.tally_umd1
 			},
 		}
 
