@@ -2,4 +2,7 @@
 
 **Available commands in this module**
 
-- Input select
+- Source select
+- Audio settings
+- Picture settings
+- UMD settings
