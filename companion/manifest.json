@@ -2,24 +2,27 @@
 	"id": "lilliput-monitor",
 	"name": "lilliput-monitor",
 	"shortname": "lilliput-monitor",
-	"legacyIds": [],
-	"version": "0.0.0",
 	"description": "Lilliput Monitor",
-	"runtime": {
-		"type": "node18",
-		"api": "nodejs-ipc",
-		"apiVersion": "0.0.0",
-		"entrypoint": "../index.js"
-	},
-	"keywords": ["Lilliput", "Monitor"],
-	"manufacturer": "Lilliput",
-	"products": ["Monitor", "Q18"],
+	"version": "1.0.1",
+	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-lilliput-monitor.git",
+	"bugs": "https://github.com/bitfocus/companion-module-lilliput-monitor/issues",
 	"maintainers": [
 		{
 			"name": "Peter Newman"
 		}
 	],
-	"license": "MIT",
-	"bugs": "https://github.com/bitfocus/companion-module-lilliput-monitor/issues"
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../index.js"
+	},
+	"legacyIds": [],
+	"manufacturer": "Lilliput",
+	"products": ["Monitor", "Q18"],
+	"keywords": [
+		"Lilliput",
+		"Monitor"
+	]
 }
