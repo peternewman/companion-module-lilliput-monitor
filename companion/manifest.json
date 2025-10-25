@@ -21,8 +21,5 @@
 	"legacyIds": [],
 	"manufacturer": "Lilliput",
 	"products": ["Monitor", "Q18"],
-	"keywords": [
-		"Lilliput",
-		"Monitor"
-	]
+	"keywords": ["Lilliput", "Monitor"]
 }
