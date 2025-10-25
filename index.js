@@ -161,7 +161,7 @@ class LilliputMonitorInstance extends InstanceBase {
 			try {
 				this.udp.close()
 			} catch (error) {
-				this.log('error', 'Error closing UDP port')
+				this.log('error', 'Error closing UDP port: ' + error)
 			} finally {
 				delete this.udp
 			}
@@ -235,8 +235,8 @@ class LilliputMonitorInstance extends InstanceBase {
 			if (typeof data.value === 'object' || Array.isArray(data.value)) {
 				for (var k in data.value) {
 					if (k == 'format1') {
-						var decodedText = ''
-						for (var i = 1; i <= 18; i++) {
+						let decodedText = ''
+						for (let i = 1; i <= 18; i++) {
 							if (data.value['format' + i] !== undefined) {
 								decodedText += String.fromCharCode(data.value['format' + i])
 								// Drop the now redundant original value
@@ -246,8 +246,8 @@ class LilliputMonitorInstance extends InstanceBase {
 						// Truncate on null and strip any trailing whitespace
 						self.DATA['format'] = decodedText.replace(/\0.*$/, '').trimEnd()
 					} else if (k == 'name1') {
-						var decodedText = ''
-						for (var i = 1; i <= 16; i++) {
+						let decodedText = ''
+						for (let i = 1; i <= 16; i++) {
 							if (data.value['name' + i] !== undefined) {
 								decodedText += String.fromCharCode(data.value['name' + i])
 								// Drop the now redundant original value
@@ -359,7 +359,7 @@ class LilliputMonitorInstance extends InstanceBase {
 			try {
 				this.udp.close()
 			} catch (error) {
-				debug('Error closing UDP port')
+				this.log('error', 'Error closing UDP port: ' + error)
 			} finally {
 				delete this.udp
 			}
@@ -462,7 +462,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.source == feedback.options.source_name
 			},
 		}
@@ -487,7 +487,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.volume == parseInt(feedback.options.volume)
 			},
 		}
@@ -512,7 +512,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.contrast == parseInt(feedback.options.contrast)
 			},
 		}
@@ -537,7 +537,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.brightness == parseInt(feedback.options.brightness)
 			},
 		}
@@ -562,7 +562,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.sharpness == parseInt(feedback.options.sharpness)
 			},
 		}
@@ -587,7 +587,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.saturation == parseInt(feedback.options.saturation)
 			},
 		}
@@ -612,7 +612,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.tint == parseInt(feedback.options.tint)
 			},
 		}
@@ -637,7 +637,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA.backlight == parseInt(feedback.options.backlight)
 			},
 		}
@@ -659,7 +659,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA['color-temp'] == feedback.options.color_temp
 			},
 		}
@@ -681,7 +681,7 @@ class LilliputMonitorInstance extends InstanceBase {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(255, 255, 0),
 			},
-			callback: (feedback, bank) => {
+			callback: (feedback) => {
 				return this.DATA['tally-umd1'] == feedback.options.tally_umd1
 			},
 		}
