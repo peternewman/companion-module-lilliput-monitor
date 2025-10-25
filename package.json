@@ -1,10 +1,11 @@
 {
 	"name": "lilliput-monitor",
-	"version": "1.0.0",
-        "main": "index.js",
+	"version": "1.0.1",
+	"main": "index.js",
 	"homepage": "https://github.com/bitfocus/companion-module-lilliput-monitor#readme",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
+		"package": "companion-module-build",
 		"format": "prettier -w ."
 	},
 	"repository": {
@@ -14,12 +15,14 @@
 	"author": "Peter Newman",
 	"license": "MIT",
 	"dependencies": {
-		"@companion-module/base": "~1.11.0",
+		"@companion-module/base": "^1.13.2",
 		"lilliput-monitor": "github:peternewman/lilliput-monitor"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json",
 	"devDependencies": {
 		"@companion-module/tools": "^2.1.0",
+		"eslint": "^9.38.0",
 		"prettier": "^3.3.3"
-	}
+	},
+	"packageManager": "yarn@4.5.3"
 }
