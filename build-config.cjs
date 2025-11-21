@@ -1,3 +1,3 @@
 module.exports = {
-	extraFiles: ['node_modules/lilliput-monitor/lilliputd.xml'],
-} 
+	extraFiles: ['node_modules/lilliput-monitor/lilliputd.xml']
+}
